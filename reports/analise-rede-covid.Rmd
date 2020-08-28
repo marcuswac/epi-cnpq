@@ -28,7 +28,15 @@ srag_covid <- srag %>%
         sort = TRUE,
         name = "Notificações")
 
-DT::datatable(srag_covid, filter = "top")
+DT::datatable(
+  srag_covid,
+  filter = "top",
+  extensions = 'Buttons',
+  options = list(
+    dom = 'Bfrtip',
+    buttons = c('csv', 'excel', 'pdf')
+  )
+)
 
 write_csv2(srag_covid, here("output/notificacoes_srag_covid.csv"))
 ```
