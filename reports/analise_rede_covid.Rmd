@@ -1,0 +1,36 @@
+---
+title: "Análise da rede de atendimento COVID-19"
+author: "Marcus Carvalho"
+date: "28/08/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(DT)
+library(here)
+library(readr)
+library(RMySQL)
+library(stringr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Notificações de SRAG com confirmação de COVID-19 por unidade de saúde
+
+```{r}
+srag <- read.csv2(here("data/srag.csv.gz"))
+
+srag_covid <- srag %>%
+  filter(CLASSI_FIN == 5) %>%
+  count(UF = SG_UF_NOT,
+        Municipio = ID_MUNICIP,
+        Unidade = ID_UNIDADE,
+        sort = TRUE,
+        name = "Notificações")
+
+DT::datatable(srag_covid, filter = "top")
+
+write_csv2(srag_covid, here("output/notificacoes_srag_covid.csv"))
+```
+
+
