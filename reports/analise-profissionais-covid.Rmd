@@ -1,0 +1,83 @@
+---
+title: "analise-profissionais-covid"
+author: "Marcus Carvalho"
+date: "9/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(DT)
+library(here)
+library(readr)
+library(RMySQL)
+library(stringr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, include=FALSE}
+cnes_dir <- "~/local/datasets/dados-sus/BASE_DE_DADOS_CNES_202007"
+
+#srag <- read.csv2(here("data/srag.csv.gz"))
+
+# srag_covid <- srag %>%
+#   filter(CLASSI_FIN == 5) %>%
+#   count(UF = SG_UF_NOT,
+#         MUNICIPIO = ID_MUNICIP,
+#         NO_FANTASIA = ID_UNIDADE,
+#         CO_CNES = as.character(CO_UNI_NOT),
+#         sort = TRUE,
+#         name = "notificacoes")
+# 
+# write_csv(srag_covid, here("data/srag_covid_notificacoes_resumo.csv"))
+
+srag_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
+  read_csv()
+
+prof_sus <- file.path(cnes_dir, "tbDadosProfissionalSus202007.csv") %>%
+  read_csv2()
+
+estabelecimento <- file.path(cnes_dir, "tbEstabelecimento202007.csv") %>%
+  read_csv2(col_types = cols("CO_UNIDADE" = col_character()))
+#equipe <- read_csv2("~/local/datasets/dados-sus/BASE_DE_DADOS_CNES_202007/rlEstabEquipeProf202007.csv",
+#                    col_types = cols("CO_UNIDADE" = col_character(),
+#                                     "CO_CBO" = col_character()))
+
+carga_horaria_sus <- file.path(cnes_dir, "tbCargaHorariaSus202007.csv") %>%
+  read_csv2()
+
+atividade_profissional <- read_csv2("~/local/datasets/dados-sus/BASE_DE_DADOS_CNES_202007/tbAtividadeProfissional202007.csv",
+                                    col_types = cols("CO_CBO" = col_character()))
+
+estabelecimento_covid <- srag_covid %>%
+  left_join(estabelecimento, by = "NO_FANTASIA") %>%
+  #left_join(equipe, by = "CO_UNIDADE") %>%
+  left_join(carga_horaria_sus, by = "CO_UNIDADE") %>%
+  left_join(prof_sus, by = "CO_PROFISSIONAL_SUS") %>%
+  left_join(atividade_profissional)
+```
+
+```{r, include=FALSE}
+profissionais_covid <- estabelecimento_covid %>%
+  filter(!is.na(DS_ATIVIDADE_PROFISSIONAL)) %>%
+  group_by(UF,
+           Municipio = MUNICIPIO,
+           Unidade = NO_FANTASIA,
+           `Atividade profissional` = DS_ATIVIDADE_PROFISSIONAL) %>%
+  summarise(`Qtd profissionais` = n(),
+            `Notificações COVID total da unidade` = first(notificacoes)) %>%
+  arrange(desc(`Notificações COVID total da unidade`), desc(`Qtd profissionais`))
+  
+```
+
+```{r, warning=FALSE}
+DT::datatable(
+  profissionais_covid,
+  filter = "top",
+  extensions = 'Buttons',
+  options = list(
+    dom = 'Bfrtip',
+    buttons = c('csv', 'excel', 'pdf')
+  )
+)
+```
