@@ -1,7 +1,7 @@
 ---
-title: "analise-profissionais-covid"
+title: "Análise de profissionais em unidades de saúde com notificações para a COVID-19"
 author: "Marcus Carvalho"
-date: "9/18/2020"
+date: "02/10/2020"
 output: html_document
 ---
 
@@ -67,7 +67,8 @@ profissionais_covid <- estabelecimento_covid %>%
   summarise(`Qtd profissionais` = n(),
             `Notificações COVID total da unidade` = first(notificacoes)) %>%
   arrange(desc(`Notificações COVID total da unidade`), desc(`Qtd profissionais`))
-  
+
+#write_csv2(profissionais_covid, here("data/profissionais_unidades_covid.csv"))
 ```
 
 ```{r, warning=FALSE}
