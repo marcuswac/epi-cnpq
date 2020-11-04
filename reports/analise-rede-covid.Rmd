@@ -40,5 +40,7 @@ DT::datatable(
 
 write_csv2(srag_covid, here("output/notificacoes_srag_covid.csv"))
 ```
+## Método
+
 
 

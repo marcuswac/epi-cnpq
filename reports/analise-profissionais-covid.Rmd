@@ -16,49 +16,47 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, include=FALSE}
-cnes_dir <- "~/local/datasets/dados-sus/BASE_DE_DADOS_CNES_202007"
+cnes_dir <- "~/local/datasets/dados-sus/BASE_DE_DADOS_CNES"
 
-#srag <- read.csv2(here("data/srag.csv.gz"))
-
-# srag_covid <- srag %>%
-#   filter(CLASSI_FIN == 5) %>%
-#   count(UF = SG_UF_NOT,
-#         MUNICIPIO = ID_MUNICIP,
-#         NO_FANTASIA = ID_UNIDADE,
-#         CO_CNES = as.character(CO_UNI_NOT),
-#         sort = TRUE,
-#         name = "notificacoes")
+# srag_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
+#   read_csv()
 # 
-# write_csv(srag_covid, here("data/srag_covid_notificacoes_resumo.csv"))
+# prof_sus <- file.path(cnes_dir, "tbDadosProfissionalSus202009.csv") %>%
+#   read_csv2()
+# 
+# estabelecimento <- file.path(cnes_dir, "tbEstabelecimento202009.csv") %>%
+#   read_csv2(col_types = cols("CO_UNIDADE" = col_character()))
+# 
+# carga_horaria_sus <- file.path(cnes_dir, "tbCargaHorariaSus202009.csv") %>%
+#   read_csv2()
+# 
+# atividade_prof <- file.path(cnes_dir, "tbAtividadeProfissional202009.csv") %>%
+#   read_csv2(col_types = cols("CO_CBO" = col_character()))
 
-srag_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
-  read_csv()
+estabelecimento_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
+  read_csv() %>%
+  left_join(
+    read_csv2(file.path(cnes_dir, "tbEstabelecimento202009.csv"),
+              col_types = cols("CO_UNIDADE" = "c")),
+    by = "NO_FANTASIA"
+  ) %>%
+  left_join(
+    read_csv2(file.path(cnes_dir, "tbCargaHorariaSus202009.csv")),
+    by = "CO_UNIDADE") %>%
+  left_join(
+    read_csv2(file.path(cnes_dir, "tbDadosProfissionalSus202009.csv")),
+    by = "CO_PROFISSIONAL_SUS") %>%
+  left_join(
+    read_csv2(file.path(cnes_dir, "tbAtividadeProfissional202009.csv"),
+              col_types = cols("CO_CBO" = "c"))
+  )
+    
 
-prof_sus <- file.path(cnes_dir, "tbDadosProfissionalSus202007.csv") %>%
-  read_csv2()
-
-estabelecimento <- file.path(cnes_dir, "tbEstabelecimento202007.csv") %>%
-  read_csv2(col_types = cols("CO_UNIDADE" = col_character()))
-#equipe <- read_csv2("~/local/datasets/dados-sus/BASE_DE_DADOS_CNES_202007/rlEstabEquipeProf202007.csv",
-#                    col_types = cols("CO_UNIDADE" = col_character(),
-#                                     "CO_CBO" = col_character()))
-
-carga_horaria_sus <- file.path(cnes_dir, "tbCargaHorariaSus202007.csv") %>%
-  read_csv2()
-
-atividade_profissional <- read_csv2("~/local/datasets/dados-sus/BASE_DE_DADOS_CNES_202007/tbAtividadeProfissional202007.csv",
-                                    col_types = cols("CO_CBO" = col_character()))
-
-estabelecimento_covid <- srag_covid %>%
-  left_join(estabelecimento, by = "NO_FANTASIA") %>%
-  #left_join(equipe, by = "CO_UNIDADE") %>%
-  left_join(carga_horaria_sus, by = "CO_UNIDADE") %>%
-  left_join(prof_sus, by = "CO_PROFISSIONAL_SUS") %>%
-  left_join(atividade_profissional)
+#rm(srag_covid, prof_sus, estabelecimento, )
 ```
 
 ```{r, include=FALSE}
-profissionais_covid <- estabelecimento_covid %>%
+prof_covid <- estabelecimento_covid %>%
   filter(!is.na(DS_ATIVIDADE_PROFISSIONAL)) %>%
   group_by(UF,
            Municipio = MUNICIPIO,
@@ -68,12 +66,14 @@ profissionais_covid <- estabelecimento_covid %>%
             `Notificações COVID total da unidade` = first(notificacoes)) %>%
   arrange(desc(`Notificações COVID total da unidade`), desc(`Qtd profissionais`))
 
-#write_csv2(profissionais_covid, here("data/profissionais_unidades_covid.csv"))
+#write_csv2(prof_covid, here("data/profissionais_unidades_covid.csv"))
 ```
+
+## Estabelecimentos de saúde com a quantidade de profissionais de saúde por atividade profissional e a quantidade de notificações de Covid-19 realizadas pelo estabelecimento
 
 ```{r, warning=FALSE}
 DT::datatable(
-  profissionais_covid,
+  prof_covid,
   filter = "top",
   extensions = 'Buttons',
   options = list(
@@ -82,3 +82,15 @@ DT::datatable(
   )
 )
 ```
+
+## Método
+
+São usadas duas bases de dados do Ministério da Saúde:
+
+- [Cadastro Nacional dos Estalabecimentos de Saúde](http://cnes.datasus.gov.br/pages/downloads/arquivosBaseDados.jsp) (**CNES**): para cada estabelecimento de saúde, contém informações sobre a quantidade de profissionais que trabalham na unidade por atividade profissional.
+- [Banco de dados de Síndrome Respiratórioa Aguda Grave](https://opendatasus.saude.gov.br/dataset/bd-srag-2020) (**SRAG**): contém informações de notificações de casos de Covid-19 e internações, indicando qual estabelecimento de realizou a notificação do caso.
+
+Para os dados do CNES, foi calculada a quantidade de profissionais de saúde que atuam em cada estabelecimento de saúde, agrupado por atividade profissional.
+Para os dados de SRAG, foi calculada a quantidade de notificações de Covid-19 realizadas por cada estabelecimento de saúde.
+
+Após os cálculos individuais em cada tabela, foi feita uma junção das duas tabelas e a tabela resultante foi apresentada neste relatório.
