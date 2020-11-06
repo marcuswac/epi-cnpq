@@ -55,6 +55,27 @@ estabelecimento_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
 #rm(srag_covid, prof_sus, estabelecimento, )
 ```
 
+```{r}
+prof_covid_uf <- estabelecimento_covid %>%
+  filter(!is.na(DS_ATIVIDADE_PROFISSIONAL)) %>%
+  group_by(UF) %>%
+  summarise(`Qtd profissionais` = n())
+```
+
+### Quantidade de profissionais atuando em estabelecimentos de saúde que notificam casos de Covid-19 por estado
+
+```{r, warning=FALSE}
+DT::datatable(
+  prof_covid_uf,
+  filter = "top",
+  extensions = 'Buttons',
+  options = list(
+    dom = 'Bfrtip',
+    buttons = c('csv', 'excel', 'pdf')
+  )
+)
+```
+
 ```{r, include=FALSE}
 prof_covid <- estabelecimento_covid %>%
   filter(!is.na(DS_ATIVIDADE_PROFISSIONAL)) %>%
@@ -69,7 +90,7 @@ prof_covid <- estabelecimento_covid %>%
 #write_csv2(prof_covid, here("data/profissionais_unidades_covid.csv"))
 ```
 
-## Estabelecimentos de saúde com a quantidade de profissionais de saúde por atividade profissional e a quantidade de notificações de Covid-19 realizadas pelo estabelecimento
+### Estabelecimentos de saúde com a quantidade de profissionais de saúde por atividade profissional e a quantidade de notificações de Covid-19 realizadas pelo estabelecimento
 
 ```{r, warning=FALSE}
 DT::datatable(
