@@ -48,14 +48,16 @@ atualiza_dados_profissionais_covid <- function() {
              Municipio = MUNICIPIO,
              Unidade = NO_FANTASIA,
              `Atividade profissional` = DS_ATIVIDADE_PROFISSIONAL,
-             `Natureza Juridica` = case_when(
-               str_starts(CO_NATUREZA_JUR, "1") ~ "Administração pública",
-               str_starts(CO_NATUREZA_JUR, "2") ~ "Entidade empresarial",
-               str_starts(CO_NATUREZA_JUR, "3") ~ "Entidade sem fins lucrativo",
-               str_starts(CO_NATUREZA_JUR, "4") ~ "Pessoa física",
-               TRUE ~ "Outros"
-             ),
-             `Tipo Estabelecimento` = DS_TIPO_ESTABELECIMENTO,
+             `Natureza juridica` = DS_NATUREZA_JUR,
+             #`Natureza Juridica` = case_when(
+            #   str_starts(CO_NATUREZA_JUR, "1") ~ "Administração pública",
+            #   str_starts(CO_NATUREZA_JUR, "2") ~ "Entidade empresarial",
+            #   str_starts(CO_NATUREZA_JUR, "3") ~ "Entidade sem fins lucrativos",
+            #   str_starts(CO_NATUREZA_JUR, "4") ~ "Pessoa física",
+            #   TRUE ~ "Outros"
+            # ),
+             `Tipo de estabelecimento` = DS_TIPO_ESTABELECIMENTO,
+             `Atende SUS` = TP_SUS_NAO_SUS,
     ) %>%
     summarise(`Qtd profissionais` = n(),
               `Notificações COVID total da unidade` = first(notificacoes)) %>%
@@ -63,3 +65,5 @@ atualiza_dados_profissionais_covid <- function() {
   
   write_csv2(prof_covid, here("data", "profissionais_unidades_covid.csv"))
 }
+
+atualiza_dados_profissionais_covid()

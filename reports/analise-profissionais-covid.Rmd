@@ -1,7 +1,7 @@
 ---
 title: "Análise de profissionais em unidades de saúde com notificações para a COVID-19"
 author: "Marcus Carvalho"
-date: "02/10/2020"
+date: "30/11/2020"
 output: html_document
 ---
 
@@ -23,8 +23,7 @@ São usadas duas bases de dados do Ministério da Saúde:
 - [Cadastro Nacional dos Estalabecimentos de Saúde](http://cnes.datasus.gov.br/pages/downloads/arquivosBaseDados.jsp) (**CNES**): para cada estabelecimento de saúde, contém informações sobre a quantidade de profissionais que trabalham na unidade por atividade profissional.
 - [Banco de dados de Síndrome Respiratórioa Aguda Grave](https://opendatasus.saude.gov.br/dataset/bd-srag-2020) (**SRAG**): contém informações de notificações de casos de Covid-19 e internações, indicando qual estabelecimento de realizou a notificação do caso.
 
-Para os dados do CNES, foi calculada a quantidade de profissionais de saúde que atuam em cada estabelecimento de saúde, agrupado por atividade profissional.
-Para os dados de SRAG, foi calculada a quantidade de notificações de Covid-19 realizadas por cada estabelecimento de saúde.
+Para os dados do CNES, foi calculada a quantidade de profissionais de saúde que atuam em cada estabelecimento de saúde, agrupado por diferentes características Para os dados de SRAG, foi calculada a quantidade de notificações de Covid-19 realizadas por cada estabelecimento de saúde.
 
 Após os cálculos individuais em cada tabela, foi feita uma junção das duas tabelas e a tabela resultante foi apresentada neste relatório.
 
@@ -38,7 +37,7 @@ prof_covid <- read_csv2(here("data", "profissionais_unidades_covid.csv"))
 rpivotTable(
   prof_covid,
   rows = c("UF"),
-  cols = c("Natureza Juridica"),
+  cols = c("Atende SUS"),
   aggregatorName = "Soma de Inteiros",
   vals = c("Qtd profissionais"),
   locale = "pt",
