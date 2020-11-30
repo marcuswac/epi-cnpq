@@ -10,98 +10,10 @@ library(dplyr)
 library(DT)
 library(here)
 library(readr)
-library(RMySQL)
+library(rpivotTable)
+#library(RMySQL)
 library(stringr)
 knitr::opts_chunk$set(echo = FALSE)
-```
-
-```{r, include=FALSE}
-cnes_dir <- "~/local/datasets/dados-sus/BASE_DE_DADOS_CNES"
-
-# srag_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
-#   read_csv()
-# 
-# prof_sus <- file.path(cnes_dir, "tbDadosProfissionalSus202009.csv") %>%
-#   read_csv2()
-# 
-# estabelecimento <- file.path(cnes_dir, "tbEstabelecimento202009.csv") %>%
-#   read_csv2(col_types = cols("CO_UNIDADE" = col_character()))
-# 
-# carga_horaria_sus <- file.path(cnes_dir, "tbCargaHorariaSus202009.csv") %>%
-#   read_csv2()
-# 
-# atividade_prof <- file.path(cnes_dir, "tbAtividadeProfissional202009.csv") %>%
-#   read_csv2(col_types = cols("CO_CBO" = col_character()))
-
-estabelecimento_covid <- here("data/srag_covid_notificacoes_resumo.csv") %>%
-  read_csv() %>%
-  left_join(
-    read_csv2(file.path(cnes_dir, "tbEstabelecimento202009.csv"),
-              col_types = cols("CO_UNIDADE" = "c")),
-    by = "NO_FANTASIA"
-  ) %>%
-  left_join(
-    read_csv2(file.path(cnes_dir, "tbCargaHorariaSus202009.csv")),
-    by = "CO_UNIDADE") %>%
-  left_join(
-    read_csv2(file.path(cnes_dir, "tbDadosProfissionalSus202009.csv")),
-    by = "CO_PROFISSIONAL_SUS") %>%
-  left_join(
-    read_csv2(file.path(cnes_dir, "tbAtividadeProfissional202009.csv"),
-              col_types = cols("CO_CBO" = "c"))
-  )
-    
-
-#rm(srag_covid, prof_sus, estabelecimento, )
-```
-
-```{r}
-prof_covid_uf <- estabelecimento_covid %>%
-  filter(!is.na(DS_ATIVIDADE_PROFISSIONAL)) %>%
-  group_by(UF) %>%
-  summarise(`Qtd profissionais` = n())
-```
-
-### Quantidade de profissionais atuando em estabelecimentos de saúde que notificam casos de Covid-19 por estado
-
-```{r, warning=FALSE}
-DT::datatable(
-  prof_covid_uf,
-  filter = "top",
-  extensions = 'Buttons',
-  options = list(
-    dom = 'Bfrtip',
-    buttons = c('csv', 'excel', 'pdf')
-  )
-)
-```
-
-```{r, include=FALSE}
-prof_covid <- estabelecimento_covid %>%
-  filter(!is.na(DS_ATIVIDADE_PROFISSIONAL)) %>%
-  group_by(UF,
-           Municipio = MUNICIPIO,
-           Unidade = NO_FANTASIA,
-           `Atividade profissional` = DS_ATIVIDADE_PROFISSIONAL) %>%
-  summarise(`Qtd profissionais` = n(),
-            `Notificações COVID total da unidade` = first(notificacoes)) %>%
-  arrange(desc(`Notificações COVID total da unidade`), desc(`Qtd profissionais`))
-
-#write_csv2(prof_covid, here("data/profissionais_unidades_covid.csv"))
-```
-
-### Estabelecimentos de saúde com a quantidade de profissionais de saúde por atividade profissional e a quantidade de notificações de Covid-19 realizadas pelo estabelecimento
-
-```{r, warning=FALSE}
-DT::datatable(
-  prof_covid,
-  filter = "top",
-  extensions = 'Buttons',
-  options = list(
-    dom = 'Bfrtip',
-    buttons = c('csv', 'excel', 'pdf')
-  )
-)
 ```
 
 ## Método
@@ -115,3 +27,21 @@ Para os dados do CNES, foi calculada a quantidade de profissionais de saúde que
 Para os dados de SRAG, foi calculada a quantidade de notificações de Covid-19 realizadas por cada estabelecimento de saúde.
 
 Após os cálculos individuais em cada tabela, foi feita uma junção das duas tabelas e a tabela resultante foi apresentada neste relatório.
+
+## Dados 
+
+### Quantidade de profissionais atuando em estabelecimentos de saúde de acordo com suas características
+
+```{r, warning=FALSE, message=FALSE}
+prof_covid <- read_csv2(here("data", "profissionais_unidades_covid.csv"))
+  
+rpivotTable(
+  prof_covid,
+  rows = c("UF"),
+  cols = c("Natureza Juridica"),
+  aggregatorName = "Soma de Inteiros",
+  vals = c("Qtd profissionais"),
+  locale = "pt",
+  subtotals = TRUE
+)
+```
