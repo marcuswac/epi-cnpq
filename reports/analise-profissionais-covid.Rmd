@@ -13,6 +13,7 @@ library(readr)
 library(rpivotTable)
 #library(RMySQL)
 library(stringr)
+library(tidyselect)
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
@@ -32,14 +33,17 @@ Após os cálculos individuais em cada tabela, foi feita uma junção das duas t
 ### Quantidade de profissionais atuando em estabelecimentos de saúde de acordo com suas características
 
 ```{r, warning=FALSE, message=FALSE}
-prof_covid <- read_csv2(here("data", "profissionais_unidades_covid.csv"))
+prof_covid <- read_csv2(here("data", "profissionais_unidades_covid.csv")) %>%
+  select(sort(peek_vars()), -cnes, -NO_FANTASIA) %>%
+  rename(qtd_notificacoes_covid = notificacoes) %>%
+  janitor::clean_names(case = "title", abbreviations = c("UF", "SUS"))
   
 rpivotTable(
   prof_covid,
   rows = c("UF"),
-  cols = c("Atende SUS"),
+  #cols = c("Atende SUS"),
   aggregatorName = "Soma de Inteiros",
-  vals = c("Qtd profissionais"),
+  vals = "Qtd Profissionais SUS",
   locale = "pt",
   subtotals = TRUE
 )
